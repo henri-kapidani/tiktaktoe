@@ -1,0 +1,78 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+}
+
+.grid-big {
+    padding: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.grid > .gap-color {
+    aspect-ratio: 1/1;
+    display: grid;
+    gap: 2px;
+    justify-items: stretch;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+}
+
+.gap-color {
+    background-color: black;
+}
+
+.grid-big {
+    width: min(100vh, 100%);
+}
+
+.grid-small,
+.cell {
+    position: relative;
+}
+
+.grid-small,
+.grid-big
+.cell {
+    padding: 7px;
+    background-color: white;
+    text-align: center;
+}
+
+.current-grid {
+    background-color: #3dad08;
+}
+
+.owned::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+}
+
+.grid-small.owned::after {
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.o::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='blue' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' /%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.x::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='red' viewBox='0 0 16 16'%3E%3Cpath d='M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.grid-small.current-grid .cell {
+    cursor: pointer;
+}
