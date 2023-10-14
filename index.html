@@ -32,57 +32,122 @@
 			</div>
 		</div>
 
-		<!-- <div class="overlay result-overlay" v-show="isResultOverlayVisible" @click="isResultOverlayVisible = false">
-			<h1>The winner is {{ gameResult }}</h1>
-		</div> -->
+		<!-- modals -->
 
-		<div class="modal fade" tabindex="-1" :class="{show: modals.start}">
+		<div class="modal fade" :class="{show: modals.start}">
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h1 class="modal-title fs-5">How you want to play?</h1>
+						<h1 class="modal-title fs-5">Game mode</h1>
 					</div>
 					<div class="modal-body">
-						<div v-show="shareUrl">
-							Send the invitation link to your friend
-						</div>
+						You can play with your friends on the same device, or from remote, each one on his device.
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+							@click="modals.start = false">Play local</button>
 
-						<div v-show="answer">
-							Send the code to your friend.
+						<button type="button" class="btn btn-primary" @click="actionPlayRemote">Play remote</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" :class="{show: modals.shareUrl}">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">Share the link</h1>
+					</div>
+					<div class="modal-body">
+						<div>
+							Send the invitation link to your friend and wait for him to send you the code.
 						</div>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" v-show="!answer"
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
 							@click="modals.start = false">Play local</button>
 
-						<button type="button" class="btn btn-primary" v-show="!answer" @click="setupRemote">Play
-							remote</button>
-
-						<button type="button" class="btn btn-primary" v-show="shareUrl"
-							@click="share(shareUrl, true)">Share
+						<button type="button" class="btn btn-primary" @click="actionShareUrl">Share
 							link</button>
+					</div>
+				</div>
+			</div>
+		</div>
 
-						<button type="button" class="btn btn-primary" v-show="answer" @click="share(answer)">Share
+		<div class="modal fade" :class="{show: modals.shareAnswer}">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">Share the code</h1>
+					</div>
+					<div class="modal-body">
+						<div>
+							Send the code back to your friends to complete the connection.
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+							@click="modals.start = false">Play local</button>
+
+						<button type="button" class="btn btn-primary" @click="actionShareAnswer">Share
 							code</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="modal fade" :class="{show: isResultOverlayVisible}">
+		<div class="modal fade" :class="{show: modals.waitingConnection}">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">Waiting your friend...</h1>
+					</div>
+					<div class="modal-body">
+						We are waiting your friend to start playing.
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" :class="{show: modals.insertAnswer}">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">Insert the code</h1>
+					</div>
+					<div class="modal-body">
+						<div>
+							Insert the code that your friend has sent to you to complete the connection.
+							<div class="mb-3">
+								<input type="text" class="form-control" v-model="answer">
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+							@click="modals.start = false">Play local</button>
+
+						<button type="button" class="btn btn-primary" @click="actionInsertAnswer">Connect!</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" :class="{show: modals.result}">
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
 					<div class="modal-header">
 						<h1 class="modal-title fs-5"></h1>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							@click="isResultOverlayVisible = false"></button>
+							@click="modals.result = false"></button>
 					</div>
 					<div class="modal-body">
 						<h1>The winner is {{ gameResult }}</h1>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-							@click="isResultOverlayVisible = false">Close</button>
+							@click="modals.result = false">Close</button>
 					</div>
 				</div>
 			</div>

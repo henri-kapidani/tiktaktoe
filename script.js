@@ -21,9 +21,12 @@ createApp({
 			currentPlayer: null,
 			currentGridIndex: null,
 			gameResult: null,
-			isResultOverlayVisible: false,
 			modals: {
-				start: true,
+				start: false,
+				shareUrl: false,
+				shareAnswer: false,
+				waitingConnection: false,
+				insertAnswer: false,
 				result: false,
 			},
 		};
@@ -39,6 +42,9 @@ createApp({
 			this.isOfferSide = !this.searchParams.has('o');
 			if (!this.isOfferSide) {
 				this.setupRemote();
+				this.modals.shareAnswer = true;
+			} else {
+				this.modals.start = true;
 			}
 		},
 
@@ -56,6 +62,48 @@ createApp({
 				[null, 'x', 'x', 'o', null, null, null, null, null],
 			];
 			this.currentPlayer = 'x';
+		},
+
+		actionPlayRemote() {
+			this.modals.start = false,
+				this.setupRemote();
+			this.modals.shareUrl = true;
+		},
+
+		actionShareUrl() {
+			if (navigator.share) {
+				const shareData = {
+					title: "TikTakToe",
+					text: this.shareUrl,
+					url: this.shareUrl,
+				};
+				navigator.share(shareData);
+			} else {
+				navigator.clipboard(this.shareUrl);
+			}
+			this.modals.shareUrl = false;
+			this.modals.insertAnswer = true;
+		},
+
+		actionShareAnswer() {
+			if (navigator.share) {
+				const shareData = {
+					title: "TikTakToe",
+					text: this.answer,
+				};
+				navigator.share(shareData);
+			} else {
+				navigator.clipboard(this.answer);
+			}
+			this.modals.shareAnswer = false;
+			this.modals.waitingConnection = true;
+		},
+
+		actionInsertAnswer() {
+			this.pc.setRemoteDescription(JSON.parse(this.answer)).then(e => {
+				console.log('done');
+			});
+			this.modals.insertAnswer = false;
 		},
 
 		setupRemote() {
@@ -82,7 +130,16 @@ createApp({
 				negotiated: true,
 				id: 1,
 			});
-			this.channelData.onopen = e => console.log('open');
+			this.channelData.onopen = e => {
+				if (this.isOfferSide) {
+					// TODO: inviare la configuration all'amico
+				} else {
+					this.modals.waitingConnection = false;
+					// TODO: non so che altro c'è da fare
+				}
+				console.log('open');
+				this.channelData.send('ciao')
+			};
 			this.channelData.onmessage = e => console.log(e.data);
 			// this.channelData.send('message');
 
@@ -101,34 +158,13 @@ createApp({
 			}
 		},
 
-		share(text, isUrl) {
-			if (navigator.share) {
-				const shareData = {
-					title: "TikTakToe",
-					text: text,
-
-				};
-				if (isUrl) shareData.url = text;
-				navigator.share(shareData);
-			} else {
-				navigator.clipboard(text);
-			}
-
-		},
-
-		completeConnection(answer) {
-			this.pc.setRemoteDescription(answer).then(e => {
-				console.log('done');
-			});
-		},
-
 		putMark(i, j) {
 			if (this.isCurrentGrid(i) && this.grids[i][j] === null & !this.gameResult) {
 				this.grids[i][j] = this.currentPlayer;
 
 				this.bigGrid[i] = this.gridResultStatus(this.grids[i]);
 				this.gameResult = this.gridResultStatus(this.bigGrid);
-				this.isResultOverlayVisible = !!this.gameResult;
+				this.modals.result = !!this.gameResult;
 
 				if (this.bigGrid[j] !== null) {
 					this.currentGridIndex = null;
