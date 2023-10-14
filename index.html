@@ -58,7 +58,8 @@
 						<button type="button" class="btn btn-primary" v-show="!answer" @click="setupRemote">Play
 							remote</button>
 
-						<button type="button" class="btn btn-primary" v-show="shareUrl" @click="share(shareUrl)">Share
+						<button type="button" class="btn btn-primary" v-show="shareUrl"
+							@click="share(shareUrl, true)">Share
 							link</button>
 
 						<button type="button" class="btn btn-primary" v-show="answer" @click="share(answer)">Share

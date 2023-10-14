@@ -101,12 +101,14 @@ createApp({
 			}
 		},
 
-		share(text) {
+		share(text, isUrl) {
 			if (navigator.share) {
 				const shareData = {
 					title: "TikTakToe",
 					text: text,
+
 				};
+				if (isUrl) shareData.url = text;
 				navigator.share(shareData);
 			} else {
 				navigator.clipboard(text);
