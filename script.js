@@ -19,6 +19,7 @@ createApp({
 			bigGrid: null,
 			grids: null,
 			currentPlayer: null,
+			playerIdentity: null,
 			currentGridIndex: null,
 			gameResult: null,
 			modals: {
@@ -130,19 +131,36 @@ createApp({
 				negotiated: true,
 				id: 1,
 			});
+
 			this.channelData.onopen = e => {
 				if (this.isOfferSide) {
-					// TODO: inviare la configuration all'amico
+					this.playerIdentity = this.players[Math.floor(Math.random() * 2)];
+					this.channelData.send(JSON.stringify({
+						type: 'configuration',
+						playerIdentity: this.playerIdentity === 'x' ? 'o' : 'x',
+						currentPlayer: this.currentPlayer,
+					}));
 				} else {
 					this.modals.waitingConnection = false;
-					// TODO: non so che altro c'è da fare
 				}
 				console.log('open');
-				this.channelData.send('ciao')
 			};
-			this.channelData.onmessage = e => console.log(e.data);
-			// this.channelData.send('message');
 
+			this.channelData.onmessage = e => {
+				const data = JSON.parse(e.data);
+				switch (data.type) {
+					case 'configuration':
+						this.playerIdentity = data.playerIdentity;
+						this.currentPlayer = data.currentPlayer;
+						break;
+					case 'move':
+						this.putMark(data.i, data.j, true);
+						break;
+					default:
+						break;
+				}
+				console.log(data);
+			}
 
 			if (this.isOfferSide) {
 				this.pc.createOffer()
@@ -158,8 +176,8 @@ createApp({
 			}
 		},
 
-		putMark(i, j) {
-			if (this.isCurrentGrid(i) && this.grids[i][j] === null & !this.gameResult) {
+		putMark(i, j, remote) {
+			if ((this.isCurrentGrid(i) && this.grids[i][j] === null && !this.gameResult) || remote) {
 				this.grids[i][j] = this.currentPlayer;
 
 				this.bigGrid[i] = this.gridResultStatus(this.grids[i]);
@@ -172,6 +190,13 @@ createApp({
 					this.currentGridIndex = j;
 				}
 				this.currentPlayer = this.currentPlayer === 'o' ? 'x' : 'o';
+				if (this.mode === 'remote' && !remote) {
+					this.channelData.send(JSON.stringify({
+						type: 'move',
+						i: i,
+						j: j,
+					}));
+				}
 			}
 		},
 
@@ -203,7 +228,11 @@ createApp({
 					(this.currentGridIndex !== null && i === this.currentGridIndex)
 				) && !this.gameResult
 			) {
-				return true;
+				if (this.mode === 'remote' && (this.currentPlayer != this.playerIdentity)) {
+					return false;
+				} else {
+					return true;
+				}
 			}
 			return false;
 		},
