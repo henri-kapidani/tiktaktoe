@@ -6,6 +6,15 @@ createApp({
 			nCells: 9,
 			players: ['o', 'x'],
 			mode: 'local', // remote
+			options: {
+				iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+			},
+			pc: null,
+			searchParams: null,
+			isOfferSide: null,
+			shareUrl: null,
+			answer: null,
+			channelData: null,
 
 			bigGrid: null,
 			grids: null,
@@ -19,12 +28,20 @@ createApp({
 			},
 		};
 	},
+
 	methods: {
 		initializeGame() {
 			this.bigGrid = Array(this.nCells).fill(null);
 			this.grids = Array(this.nCells).fill(null).map(e => Array(this.nCells).fill(null));
 			this.currentPlayer = this.players[Math.floor(Math.random() * 2)];
+
+			this.searchParams = new URLSearchParams(window.location.search);
+			this.isOfferSide = !this.searchParams.has('o');
+			if (!this.isOfferSide) {
+				this.setupRemote();
+			}
 		},
+
 		initializeTestGame() {
 			this.bigGrid = [null, 'x', 'x', 'o', 'o', null, null, null, null];
 			this.grids = [
@@ -40,10 +57,69 @@ createApp({
 			];
 			this.currentPlayer = 'x';
 		},
+
 		setupRemote() {
 			this.mode = 'remote';
 
+			this.pc = new RTCPeerConnection(this.options);
+
+			this.pc.onicegatheringstatechange = e => {
+				if (e.target.iceGatheringState === 'complete') {
+					if (this.isOfferSide) {
+						this.shareUrl = window.location.origin +
+							window.location.pathname +
+							'?o=' +
+							encodeURIComponent(JSON.stringify(this.pc.localDescription));
+						console.log(this.shareUrl)
+					} else {
+						this.answer = JSON.stringify(this.pc.localDescription);
+						console.log(this.answer)
+					}
+				}
+			}
+
+			this.channelData = this.pc.createDataChannel('channelData', {
+				negotiated: true,
+				id: 1,
+			});
+			this.channelData.onopen = e => console.log('open');
+			this.channelData.onmessage = e => console.log(e.data);
+			// this.channelData.send('message');
+
+
+			if (this.isOfferSide) {
+				this.pc.createOffer()
+					.then(offer => this.pc.setLocalDescription(offer));
+				// send the offer to the other peer via the signaling
+				// completeConnection
+			} else {
+				const offer = JSON.parse(this.searchParams.get('o'));
+				this.pc.setRemoteDescription(offer)
+					.then(() => this.pc.createAnswer())
+					.then(answer => this.pc.setLocalDescription(answer))
+				//send the answer to the other peer via the signaling
+			}
 		},
+
+		share(text) {
+			if (navigator.share) {
+				const shareData = {
+					title: "TikTakToe",
+					text: text,
+				};
+				navigator.share(shareData);
+			} else {
+				navigator.clipboard(text);
+			}
+
+		},
+
+		completeConnection(answer) {
+			this.pc.setRemoteDescription(answer).then(e => {
+				console.log('done');
+			});
+		},
+
 		putMark(i, j) {
 			if (this.isCurrentGrid(i) && this.grids[i][j] === null & !this.gameResult) {
 				this.grids[i][j] = this.currentPlayer;
@@ -60,6 +136,7 @@ createApp({
 				this.currentPlayer = this.currentPlayer === 'o' ? 'x' : 'o';
 			}
 		},
+
 		gridResultStatus(grid) {
 			const u = this.currentPlayer;
 			// const strGrid = grid.join('');
@@ -80,6 +157,7 @@ createApp({
 			}
 			return null;
 		},
+
 		isCurrentGrid(i) {
 			if (
 				(
@@ -92,8 +170,9 @@ createApp({
 			return false;
 		},
 	},
+
 	created() {
-		// this.initializeGame();
-		this.initializeTestGame();
+		this.initializeGame();
+		// this.initializeTestGame();
 	}
 }).mount('#app');

@@ -43,12 +43,26 @@
 						<h1 class="modal-title fs-5">How you want to play?</h1>
 					</div>
 					<div class="modal-body">
-						...
+						<div v-show="shareUrl">
+							Send the invitation link to your friend
+						</div>
+
+						<div v-show="answer">
+							Send the code to your friend.
+						</div>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" v-show="!answer"
 							@click="modals.start = false">Play local</button>
-						<button type="button" class="btn btn-primary" @click="setupRemote">Play remote</button>
+
+						<button type="button" class="btn btn-primary" v-show="!answer" @click="setupRemote">Play
+							remote</button>
+
+						<button type="button" class="btn btn-primary" v-show="shareUrl" @click="share(shareUrl)">Share
+							link</button>
+
+						<button type="button" class="btn btn-primary" v-show="answer" @click="share(answer)">Share
+							code</button>
 					</div>
 				</div>
 			</div>
