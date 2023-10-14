@@ -101,7 +101,7 @@ createApp({
 		},
 
 		actionInsertAnswer() {
-			this.pc.setRemoteDescription(JSON.parse(this.answer)).then(e => {
+			this.pc.setRemoteDescription(JSON.parse(atob(this.answer))).then(e => {
 				console.log('done');
 			});
 			this.modals.insertAnswer = false;
@@ -118,10 +118,10 @@ createApp({
 						this.shareUrl = window.location.origin +
 							window.location.pathname +
 							'?o=' +
-							encodeURIComponent(JSON.stringify(this.pc.localDescription));
+							encodeURIComponent(btoa(JSON.stringify(this.pc.localDescription)));
 						console.log(this.shareUrl)
 					} else {
-						this.answer = JSON.stringify(this.pc.localDescription);
+						this.answer = btoa(JSON.stringify(this.pc.localDescription));
 						console.log(this.answer)
 					}
 				}
@@ -168,7 +168,7 @@ createApp({
 				// send the offer to the other peer via the signaling
 				// completeConnection
 			} else {
-				const offer = JSON.parse(this.searchParams.get('o'));
+				const offer = JSON.parse(atob(this.searchParams.get('o')));
 				this.pc.setRemoteDescription(offer)
 					.then(() => this.pc.createAnswer())
 					.then(answer => this.pc.setLocalDescription(answer))
@@ -177,7 +177,7 @@ createApp({
 		},
 
 		putMark(i, j, remote) {
-			if ((this.isCurrentGrid(i) && this.grids[i][j] === null && !this.gameResult) || remote) {
+			if ((this.isCurrentGrid(i, true) && this.grids[i][j] === null && !this.gameResult) || remote) {
 				this.grids[i][j] = this.currentPlayer;
 
 				this.bigGrid[i] = this.gridResultStatus(this.grids[i]);
@@ -221,14 +221,14 @@ createApp({
 			return null;
 		},
 
-		isCurrentGrid(i) {
+		isCurrentGrid(i, considerRemote) {
 			if (
 				(
 					(this.currentGridIndex === null && this.bigGrid[i] === null) ||
 					(this.currentGridIndex !== null && i === this.currentGridIndex)
 				) && !this.gameResult
 			) {
-				if (this.mode === 'remote' && (this.currentPlayer != this.playerIdentity)) {
+				if (considerRemote && this.mode === 'remote' && (this.currentPlayer != this.playerIdentity)) {
 					return false;
 				} else {
 					return true;
