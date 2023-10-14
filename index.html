@@ -1,29 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTacToe</title>
-    <style>
-        [v-cloack] {
-            display: none;
-        }
-    </style>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js" defer></script>
-    <script src="script.js" defer></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>TikTacToe</title>
+	<style>
+		[v-cloack] {
+			display: none;
+		}
+	</style>
+	<link rel="stylesheet" href="style.css">
+	<script src="https://unpkg.com/vue@3/dist/vue.global.js" defer></script>
+	<script src="script.js" defer></script>
 </head>
+
 <body>
-    <div id="app" v-cloak>
-        <div class="grid grid-big">
-            <div class="gap-color">
-                <div v-for="(grid, i) in grids" class="grid grid-small" :class="{'current-grid': isCurrentGrid(i), owned: bigGrid[i] !== null, o: bigGrid[i] === 'x', x: bigGrid[i] === 'o'}">
-                    <div class="gap-color">
-                        <div v-for="(cell, j) in grid" class="cell" :class="{owned: grid[j] !== null, o: grid[j] === 'x', x: grid[j] === 'o'}" @click="putMark(i, j)"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div id="app" v-cloak>
+		<div class="grid grid-big" :class="currentPlayer">
+			<div class="gap-color">
+				<div v-for="(grid, i) in grids" class="grid grid-small"
+					:class="{'current-grid': isCurrentGrid(i), owned: bigGrid[i] !== null, o: bigGrid[i] === 'o', x: bigGrid[i] === 'x'}">
+					<div class="gap-color">
+						<div v-for="(cell, j) in grid" class="cell"
+							:class="{owned: grid[j] !== null, o: grid[j] === 'o', x: grid[j] === 'x'}"
+							@click="putMark(i, j)"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="overlay result-overlay" v-show="gameResult">
+			<h1>The winner is {{ gameResult }}</h1>
+		</div>
+	</div>
 </body>
+
 </html>
