@@ -1,11 +1,15 @@
-* {
+/* * {
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
-}
+} */
 
 body {
 	height: 100vh;
+}
+
+.show {
+	display: block;
 }
 
 .grid-big {
@@ -27,7 +31,7 @@ body {
 }
 
 .grid.grid-big>.gap-color {
-	gap: 4px;
+	gap: 5px;
 }
 
 .gap-color {
@@ -61,8 +65,8 @@ body {
 }
 
 .grid-small.owned::after {
-	backdrop-filter: blur(3px);
-	-webkit-backdrop-filter: blur(3px);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
 }
 
 .o::after {

@@ -6,10 +6,12 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>TikTacToe</title>
 	<style>
-		[v-cloack] {
+		[v-cloak] {
 			display: none;
 		}
 	</style>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 	<link rel="stylesheet" href="style.css">
 	<script src="https://unpkg.com/vue@3/dist/vue.global.js" defer></script>
 	<script src="script.js" defer></script>
@@ -19,18 +21,56 @@
 	<div id="app" v-cloak>
 		<div class="grid grid-big" :class="currentPlayer">
 			<div class="gap-color">
-				<div v-for="(grid, i) in grids" class="grid grid-small"
+				<div v-for="(grid, i) in grids" :key="i" class="grid grid-small"
 					:class="{'current-grid': isCurrentGrid(i), owned: bigGrid[i] !== null, o: bigGrid[i] === 'o', x: bigGrid[i] === 'x'}">
 					<div class="gap-color">
-						<div v-for="(cell, j) in grid" class="cell"
+						<div v-for="(cell, j) in grid" :key="`${i}${j}`" class="cell"
 							:class="{owned: grid[j] !== null, o: grid[j] === 'o', x: grid[j] === 'x'}"
 							@click="putMark(i, j)"></div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="overlay result-overlay" v-show="gameResult">
+
+		<!-- <div class="overlay result-overlay" v-show="isResultOverlayVisible" @click="isResultOverlayVisible = false">
 			<h1>The winner is {{ gameResult }}</h1>
+		</div> -->
+
+		<div class="modal fade" tabindex="-1" :class="{show: modals.start}">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">How you want to play?</h1>
+					</div>
+					<div class="modal-body">
+						...
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+							@click="modals.start = false">Play local</button>
+						<button type="button" class="btn btn-primary" @click="setupRemote">Play remote</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" :class="{show: isResultOverlayVisible}">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5"></h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							@click="isResultOverlayVisible = false"></button>
+					</div>
+					<div class="modal-body">
+						<h1>The winner is {{ gameResult }}</h1>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+							@click="isResultOverlayVisible = false">Close</button>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </body>
