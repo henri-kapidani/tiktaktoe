@@ -4,6 +4,14 @@
 	box-sizing: border-box;
 } */
 
+.theme {
+	height: 100vh;
+	background-color: var(--bg-color);
+	--gap-grid-big: 6px;
+	--gap-grid-small: 2px;
+	--active-border-size: 14px;
+}
+
 .theme-light {
 	--bg-color: white;
 	--grid-color: black;
@@ -12,11 +20,6 @@
 .theme-dark {
 	--bg-color: rgb(27, 21, 21);
 	--grid-color: rgb(164, 157, 157);
-}
-
-.theme {
-	height: 100vh;
-	background-color: var(--bg-color);
 }
 
 .show {
@@ -35,49 +38,50 @@
 	place-items: center;
 }
 
-.border-fix {
-	overflow: hidden;
-	width: min(100vh, 100%);
-}
-
 .grid {
+	position: relative;
 	display: grid;
 	justify-items: stretch;
 	grid-template-columns: 1fr 1fr 1fr;
 	grid-template-rows: 1fr 1fr 1fr;
-	margin: calc(-1 * var(--fix-size));
+}
+
+.grid::before {
+	content: "";
+	position: absolute;
+	inset: 1px;
+	background-color: var(--grid-color);
 }
 
 .grid.grid-big {
-	--gap-size: 10px;
-	--fix-size: calc((var(--gap-size) + 5px) / 2);
+	gap: var(--gap-grid-big);
+	width: min(100vh, 100%);
 }
 
 .grid.grid-small {
-	--gap-size: 5px;
-	--fix-size: calc((var(--gap-size) + 5px) / 2);
+	gap: var(--gap-grid-small);
 }
 
-.cell-big .border-fix {
-	border: 14px solid transparent;
+.active-indicator {
+	border: var(--active-border-size) solid var(--bg-color);
 }
 
-.cell-big.current-grid.disabled-grid .border-fix {
+.active-indicator.current-grid.disabled-grid {
 	border-color: grey;
 }
 
-.o .cell-big.current-grid .border-fix {
+.o .active-indicator.current-grid {
 	border-color: blue;
 }
 
-.x .cell-big.current-grid .border-fix {
+.x .active-indicator.current-grid {
 	border-color: red;
 }
 
 .cell {
 	aspect-ratio: 1/1;
 	position: relative;
-	border: var(--fix-size) solid var(--grid-color);
+	background-color: var(--bg-color);
 }
 
 .current-grid .cell-small {

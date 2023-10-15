@@ -20,21 +20,20 @@
 <body>
 	<div id="app" v-cloak>
 		<div class="theme" :class="theme">
-			<div class="border-fix centered">
-				<div class="grid grid-big" :class="currentPlayer">
-					<div v-for="(grid, i) in grids" :key="i" class="cell cell-big" :class="{
-						owned: bigGrid[i] !== null,
-						o: bigGrid[i] === 'o',
-						x: bigGrid[i] === 'x',
+			<div class="grid grid-big centered" :class="currentPlayer">
+				<div v-for="(grid, i) in grids" :key="i" class="cell cell-big" :class="{
+					owned: bigGrid[i] !== null,
+					o: bigGrid[i] === 'o',
+					x: bigGrid[i] === 'x',
+				}">
+					<div class="active-indicator" :class="{
 						'current-grid': isCurrentGrid(i),
-						'disabled-grid': !isCurrentGrid(i, true)
+						'disabled-grid': !isCurrentGrid(i, true),
 					}">
-						<div class="border-fix">
-							<div class="grid grid-small">
-								<div v-for="(cell, j) in grid" :key="`${i}${j}`" class="cell cell-small"
-									:class="{owned: grid[j] !== null, o: grid[j] === 'o', x: grid[j] === 'x'}"
-									@click="putMark(i, j)">
-								</div>
+						<div class="grid grid-small">
+							<div v-for="(cell, j) in grid" :key="`${i}${j}`" class="cell cell-small"
+								:class="{owned: grid[j] !== null, o: grid[j] === 'o', x: grid[j] === 'x'}"
+								@click="putMark(i, j)">
 							</div>
 						</div>
 					</div>
