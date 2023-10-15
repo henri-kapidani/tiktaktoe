@@ -5,14 +5,14 @@ createApp({
 		return {
 			nCells: 9,
 			players: ['o', 'x'],
-			mode: 'local', // remote
+			mode: null, // 'local' or 'remote'
 			options: {
 				iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 			},
 			pc: null,
 			searchParams: null,
 			isOfferSide: null,
-			shareUrl: null,
+			offer: null,
 			answer: null,
 			channelData: null,
 
@@ -23,10 +23,12 @@ createApp({
 			currentGridIndex: null,
 			gameResult: null,
 			modals: {
-				start: false,
-				shareUrl: false,
+				start: true,
+				remoteType: false,
+				shareOffer: false,
 				shareAnswer: false,
 				waitingConnection: false,
+				insertOffer: false,
 				insertAnswer: false,
 				result: false,
 			},
@@ -34,20 +36,6 @@ createApp({
 	},
 
 	methods: {
-		initializeGame() {
-			this.bigGrid = Array(this.nCells).fill(null);
-			this.grids = Array(this.nCells).fill(null).map(e => Array(this.nCells).fill(null));
-			this.currentPlayer = this.players[Math.floor(Math.random() * 2)];
-
-			this.searchParams = new URLSearchParams(window.location.search);
-			this.isOfferSide = !this.searchParams.has('o');
-			if (!this.isOfferSide) {
-				this.setupRemote();
-				this.modals.shareAnswer = true;
-			} else {
-				this.modals.start = true;
-			}
-		},
 
 		initializeTestGame() {
 			this.bigGrid = [null, 'x', 'x', 'o', 'o', null, null, null, null];
@@ -65,46 +53,15 @@ createApp({
 			this.currentPlayer = 'x';
 		},
 
-		actionPlayRemote() {
-			this.modals.start = false,
-				this.setupRemote();
-			this.modals.shareUrl = true;
+		initializeGame() {
+			this.bigGrid = Array(this.nCells).fill(null);
+			this.grids = Array(this.nCells).fill(null).map(e => Array(this.nCells).fill(null));
+			this.currentPlayer = this.players[Math.floor(Math.random() * 2)];
 		},
 
-		actionShareUrl() {
-			if (navigator.share) {
-				const shareData = {
-					title: "TikTakToe",
-					text: this.shareUrl,
-					url: this.shareUrl,
-				};
-				navigator.share(shareData);
-			} else {
-				navigator.clipboard(this.shareUrl);
-			}
-			this.modals.shareUrl = false;
-			this.modals.insertAnswer = true;
-		},
-
-		actionShareAnswer() {
-			if (navigator.share) {
-				const shareData = {
-					title: "TikTakToe",
-					text: this.answer,
-				};
-				navigator.share(shareData);
-			} else {
-				navigator.clipboard(this.answer);
-			}
-			this.modals.shareAnswer = false;
-			this.modals.waitingConnection = true;
-		},
-
-		actionInsertAnswer() {
-			this.pc.setRemoteDescription(JSON.parse(atob(this.answer))).then(e => {
-				console.log('done');
-			});
-			this.modals.insertAnswer = false;
+		setupLocal() {
+			this.mode = 'local';
+			// TODO: this.pc = null;
 		},
 
 		setupRemote() {
@@ -115,14 +72,9 @@ createApp({
 			this.pc.onicegatheringstatechange = e => {
 				if (e.target.iceGatheringState === 'complete') {
 					if (this.isOfferSide) {
-						this.shareUrl = window.location.origin +
-							window.location.pathname +
-							'?o=' +
-							encodeURIComponent(btoa(JSON.stringify(this.pc.localDescription)));
-						console.log(this.shareUrl)
+						this.offer = btoa(JSON.stringify(this.pc.localDescription));
 					} else {
 						this.answer = btoa(JSON.stringify(this.pc.localDescription));
-						console.log(this.answer)
 					}
 				}
 			}
@@ -143,7 +95,6 @@ createApp({
 				} else {
 					this.modals.waitingConnection = false;
 				}
-				console.log('open');
 			};
 
 			this.channelData.onmessage = e => {
@@ -168,12 +119,70 @@ createApp({
 				// send the offer to the other peer via the signaling
 				// completeConnection
 			} else {
-				const offer = JSON.parse(atob(this.searchParams.get('o')));
-				this.pc.setRemoteDescription(offer)
-					.then(() => this.pc.createAnswer())
-					.then(answer => this.pc.setLocalDescription(answer))
-				//send the answer to the other peer via the signaling
+
 			}
+		},
+
+		actionPlayLocal() {
+			this.setupLocal();
+			this.showModal(null);
+		},
+
+		actionPlayRemote(isOfferSide) {
+			this.isOfferSide = isOfferSide;
+			this.setupRemote();
+			if (isOfferSide) {
+				this.showModal('shareOffer');
+			} else {
+				this.showModal('insertOffer');
+			}
+		},
+
+		actionShareOffer() {
+			if (navigator.share) {
+				const shareData = {
+					title: "TikTakToe",
+					text: this.offer,
+				};
+				navigator.share(shareData);
+			} else {
+				navigator.clipboard(this.offer);
+			}
+			this.showModal('insertAnswer');
+		},
+
+		actionInsertOffer() {
+			const offer = JSON.parse(atob(this.offer));
+			this.pc.setRemoteDescription(offer)
+				.then(() => this.pc.createAnswer())
+				.then(answer => this.pc.setLocalDescription(answer))
+			//send the answer to the other peer via the signaling
+			this.showModal('shareAnswer');
+		},
+
+		actionShareAnswer() {
+			if (navigator.share) {
+				const shareData = {
+					title: "TikTakToe",
+					text: this.answer,
+				};
+				navigator.share(shareData);
+			} else {
+				navigator.clipboard(this.answer);
+			}
+			this.showModal('waitingConnection');
+		},
+
+		actionInsertAnswer() {
+			this.pc.setRemoteDescription(JSON.parse(atob(this.answer)));
+			this.showModal(null);
+		},
+
+		showModal(modalName) {
+			for (const key in this.modals) {
+				this.modals[key] = false;
+			}
+			if (modalName) this.modals[modalName] = true;
 		},
 
 		putMark(i, j, remote) {

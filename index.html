@@ -45,31 +45,78 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-							@click="modals.start = false">Play local</button>
+							@click="actionPlayLocal">Play local</button>
 
-						<button type="button" class="btn btn-primary" @click="actionPlayRemote">Play remote</button>
+						<button type="button" class="btn btn-primary" @click="showModal('remoteType')">Play
+							remote</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="modal fade" :class="{show: modals.shareUrl}">
+		<div class="modal fade" :class="{show: modals.remoteType}">
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h1 class="modal-title fs-5">Share the link</h1>
+						<h1 class="modal-title fs-5">Code type</h1>
+					</div>
+					<div class="modal-body">
+						Do you have the code or you want to invite?
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+							@click="actionPlayLocal">Play local</button>
+
+						<button type="button" class="btn btn-primary" @click="actionPlayRemote('true')">Invite</button>
+
+						<button type="button" class="btn btn-primary" @click="actionPlayRemote(false)">I have the
+							code</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" :class="{show: modals.shareOffer}">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">Share the code</h1>
 					</div>
 					<div class="modal-body">
 						<div>
-							Send the invitation link to your friend and wait for him to send you the code.
+							Send the code to your friend and wait for him to send you his code.
 						</div>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-							@click="modals.start = false">Play local</button>
+							@click="actionPlayLocal">Play local</button>
 
-						<button type="button" class="btn btn-primary" @click="actionShareUrl">Share
-							link</button>
+						<button type="button" class="btn btn-primary" @click="actionShareOffer">Share
+							code</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" :class="{show: modals.insertOffer}">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">Insert the code</h1>
+					</div>
+					<div class="modal-body">
+						<div>
+							Insert the code that your friend has sent to you to complete the connection.
+							<div class="my-3">
+								<input type="text" class="form-control" v-model="offer">
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+							@click="actionPlayLocal">Play local</button>
+
+						<button type="button" class="btn btn-primary" @click="actionInsertOffer">Next</button>
 					</div>
 				</div>
 			</div>
@@ -88,7 +135,7 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-							@click="modals.start = false">Play local</button>
+							@click="actionPlayLocal">Play local</button>
 
 						<button type="button" class="btn btn-primary" @click="actionShareAnswer">Share
 							code</button>
@@ -126,7 +173,7 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-							@click="modals.start = false">Play local</button>
+							@click="actionPlayLocal">Play local</button>
 
 						<button type="button" class="btn btn-primary" @click="actionInsertAnswer">Connect!</button>
 					</div>
