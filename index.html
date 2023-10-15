@@ -199,14 +199,16 @@
 							<div class="modal-header">
 								<h1 class="modal-title fs-5"></h1>
 								<button type="button" class="btn-close" data-bs-dismiss="modal"
-									@click="modals.result = false"></button>
+									@click="showModal(null)"></button>
 							</div>
 							<div class="modal-body">
 								<h1>The winner is {{ gameResult }}</h1>
 							</div>
 							<div class="modal-footer">
 								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-									@click="modals.result = false">Close</button>
+									@click="showModal(null)">Close</button>
+								<button type="button" class="btn btn-primary" @click="actionPlayAgain">Play
+									again</button>
 							</div>
 						</div>
 					</div>
@@ -215,8 +217,6 @@
 
 			<div class="menu">
 				<button class="btn btn-primary" @click="invertTheme">Theme</button>
-				<button class="btn btn-primary">Mode</button>
-				<button class="btn btn-primary">About</button>
 			</div>
 		</div>
 	</div>

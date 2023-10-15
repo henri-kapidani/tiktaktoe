@@ -182,6 +182,10 @@ createApp({
 			this.showModal(null);
 		},
 
+		actionPlayAgain() {
+			// TODO:
+		},
+
 		showModal(modalName) {
 			for (const key in this.modals) {
 				this.modals[key] = false;
