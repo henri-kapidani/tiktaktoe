@@ -12,7 +12,15 @@ body {
 	display: block;
 }
 
-.grid-big {
+.grid {
+	aspect-ratio: 1/1;
+	display: grid;
+	justify-items: stretch;
+	grid-template-columns: 1fr 1fr 1fr;
+	grid-template-rows: 1fr 1fr 1fr;
+}
+
+.grid.grid-big {
 	width: min(100vh, 100%);
 	padding: 10px;
 	position: absolute;
@@ -21,84 +29,54 @@ body {
 	transform: translate(-50%, -50%);
 }
 
-.grid>.gap-color {
-	aspect-ratio: 1/1;
-	display: grid;
-	gap: 2px;
-	justify-items: stretch;
-	grid-template-columns: 1fr 1fr 1fr;
-	grid-template-rows: 1fr 1fr 1fr;
+.grid.grid-small {
+	border: 14px solid transparent;
 }
 
-.grid.grid-big>.gap-color {
-	gap: 5px;
+.grid-small.current-grid.disabled-grid {
+	border-color: grey;
 }
 
-.gap-color {
-	background-color: black;
+.o .grid-small.current-grid {
+	border-color: blue;
 }
 
-.grid-small,
+.x .grid-small.current-grid {
+	border-color: red;
+}
+
 .cell {
 	position: relative;
-	padding: 7px;
-	background-color: white;
-	text-align: center;
+	border: 3px solid black;
 }
 
-.grid-small {
-	padding: 14px;
-}
-
-.o .current-grid {
-	background-color: blue;
-}
-
-.x .current-grid {
-	background-color: red;
-}
-
-.grid-small.current-grid .cell {
+.grid-small.current-grid .cell.cell-small {
 	cursor: pointer;
 }
 
-.current-grid.disabled-grid {
-	background-color: grey;
-}
-
-.grid-small.current-grid.disabled-grid .cell {
+.grid-small.current-grid.disabled-grid .cell.cell-small {
 	cursor: default;
 }
 
-.owned::after {
+.cell.owned::after {
 	content: '';
 	position: absolute;
 	inset: 0;
 }
 
-.grid-small.owned::after {
+.cell.cell-big.owned::after {
 	backdrop-filter: blur(4px);
 	-webkit-backdrop-filter: blur(4px);
 }
 
-.o::after {
+.cell.owned.o::after {
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='blue' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' /%3E%3C/svg%3E");
 	background-size: contain;
 	background-repeat: no-repeat;
 }
 
-.x::after {
+.cell.owned.x::after {
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='red' viewBox='0 0 16 16'%3E%3Cpath d='M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z'/%3E%3C/svg%3E");
 	background-size: contain;
 	background-repeat: no-repeat;
-}
-
-.overlay {
-	position: fixed;
-	inset: 10%;
-	display: grid;
-	place-items: center;
-	background-color: white;
-	border-radius: 10px;
-	border: 1px solid black;
 }

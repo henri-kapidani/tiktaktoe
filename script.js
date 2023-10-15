@@ -23,7 +23,7 @@ createApp({
 			currentGridIndex: null,
 			gameResult: null,
 			modals: {
-				start: true,
+				start: false,
 				remoteType: false,
 				shareOffer: false,
 				shareAnswer: false,
