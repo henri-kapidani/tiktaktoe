@@ -3,7 +3,7 @@ const { createApp } = Vue;
 createApp({
 	data() {
 		return {
-			theme: 'theme-light',
+			theme: 'light',
 			nCells: 9,
 			players: ['o', 'x'],
 			mode: null, // 'local' or 'remote'
@@ -38,7 +38,7 @@ createApp({
 
 	methods: {
 		invertTheme() {
-			this.theme = this.theme === 'theme-light' ? 'theme-dark' : 'theme-light';
+			this.theme = this.theme === 'light' ? 'dark' : 'light';
 		},
 
 		initializeTestGame() {

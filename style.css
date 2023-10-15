@@ -12,16 +12,18 @@
 	--active-border-size: 12px;
 }
 
-.theme-light {
+.theme.light {
 	--bg-color: white;
 	--grid-color: black;
 }
 
-.theme-dark {
+.theme.dark {
 	/* chrome dark */
 	/* --bg-color: rgb(53, 54, 58); */
 	/* firefox dark */
-	--bg-color: rgb(43, 42, 51);
+	/* --bg-color: rgb(43, 42, 51); */
+	/* bootstrap dark */
+	--bg-color: rgb(33, 37, 41);
 	--grid-color: rgb(164, 157, 157);
 }
 
@@ -126,4 +128,8 @@
 	display: flex;
 	justify-content: center;
 	gap: 10px;
+}
+
+[data-bs-theme="dark"] {
+	color: rgb(222, 226, 230)
 }
