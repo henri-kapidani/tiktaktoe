@@ -3,6 +3,7 @@ const { createApp } = Vue;
 createApp({
 	data() {
 		return {
+			theme: 'theme-light',
 			nCells: 9,
 			players: ['o', 'x'],
 			mode: null, // 'local' or 'remote'
@@ -36,6 +37,9 @@ createApp({
 	},
 
 	methods: {
+		invertTheme() {
+			this.theme = this.theme === 'theme-light' ? 'theme-dark' : 'theme-light';
+		},
 
 		initializeTestGame() {
 			this.bigGrid = [null, 'x', 'x', 'o', 'o', null, null, null, null];

@@ -4,57 +4,87 @@
 	box-sizing: border-box;
 } */
 
-body {
+.theme-light {
+	--bg-color: white;
+	--grid-color: black;
+}
+
+.theme-dark {
+	--bg-color: rgb(27, 21, 21);
+	--grid-color: rgb(164, 157, 157);
+}
+
+.theme {
 	height: 100vh;
+	background-color: var(--bg-color);
 }
 
 .show {
 	display: block;
 }
 
-.grid {
-	aspect-ratio: 1/1;
-	display: grid;
-	justify-items: stretch;
-	grid-template-columns: 1fr 1fr 1fr;
-	grid-template-rows: 1fr 1fr 1fr;
-}
-
-.grid.grid-big {
-	width: min(100vh, 100%);
-	padding: 10px;
+.centered {
 	position: absolute;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
 }
 
+.app {
+	display: grid;
+	place-items: center;
+}
+
+.border-fix {
+	overflow: hidden;
+	width: min(100vh, 100%);
+}
+
+.grid {
+	display: grid;
+	justify-items: stretch;
+	grid-template-columns: 1fr 1fr 1fr;
+	grid-template-rows: 1fr 1fr 1fr;
+	margin: calc(-1 * var(--fix-size));
+}
+
+.grid.grid-big {
+	--gap-size: 10px;
+	--fix-size: calc((var(--gap-size) + 5px) / 2);
+}
+
 .grid.grid-small {
+	--gap-size: 5px;
+	--fix-size: calc((var(--gap-size) + 5px) / 2);
+}
+
+.cell-big .border-fix {
 	border: 14px solid transparent;
 }
 
-.grid-small.current-grid.disabled-grid {
+.cell-big.current-grid.disabled-grid .border-fix {
 	border-color: grey;
 }
 
-.o .grid-small.current-grid {
+.o .cell-big.current-grid .border-fix {
 	border-color: blue;
 }
 
-.x .grid-small.current-grid {
+.x .cell-big.current-grid .border-fix {
 	border-color: red;
 }
 
 .cell {
+	aspect-ratio: 1/1;
 	position: relative;
-	border: 3px solid black;
+	border: var(--fix-size) solid var(--grid-color);
 }
 
-.grid-small.current-grid .cell.cell-small {
+.current-grid .cell-small {
 	cursor: pointer;
 }
 
-.grid-small.current-grid.disabled-grid .cell.cell-small {
+.current-grid.disabled-grid .cell-small {
 	cursor: default;
 }
 
@@ -79,4 +109,14 @@ body {
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='red' viewBox='0 0 16 16'%3E%3Cpath d='M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z'/%3E%3C/svg%3E");
 	background-size: contain;
 	background-repeat: no-repeat;
+}
+
+.menu {
+	position: fixed;
+	bottom: 10px;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: center;
+	gap: 10px;
 }
