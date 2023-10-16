@@ -71,16 +71,16 @@
 	border: var(--active-border-size) solid var(--bg-color);
 }
 
-.active-indicator.current-grid.disabled-grid {
-	border-color: grey;
-}
-
 .o .active-indicator.current-grid {
 	border-color: blue;
 }
 
 .x .active-indicator.current-grid {
 	border-color: red;
+}
+
+.active-indicator.current-grid.disabled-grid {
+	border-color: grey;
 }
 
 .cell {
