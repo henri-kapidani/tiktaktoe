@@ -1,6 +1,19 @@
 const { createApp } = Vue;
 
-createApp({
+/*
+offer side:
+actionPlayRemote(true)
+actionShareOffer
+actionInsertAnswer
+
+
+answer side:
+actionPlayRemote(false)
+actionInsertOffer
+actionShareAnswer
+*/
+
+const app = createApp({
 	data() {
 		return {
 			theme: 'light',
@@ -15,13 +28,10 @@ createApp({
 			isOfferSide: null,
 			description: null,
 			channelData: null,
-			mediaConstraints: {
-				audio: true,
-				video: false,
-			},
 			isMicEnabled: false,
-			localTrack: null,
-
+			localStream: null,
+			remoteStream: null,
+			eleAudio: null,
 
 			bigGrid: null,
 			grids: null,
@@ -29,6 +39,7 @@ createApp({
 			playerIdentity: null,
 			currentGridIndex: null,
 			gameResult: null,
+
 			modals: {
 				start: true,
 				remoteType: false,
@@ -74,10 +85,26 @@ createApp({
 			// TODO: this.pc = null;
 		},
 
-		setupRemote() {
+		async setupRemote() {
 			this.mode = 'remote';
 
 			this.pc = new RTCPeerConnection(this.options);
+
+			this.remoteStream = new MediaStream();
+			this.eleAudio = new Audio();
+			this.eleAudio.autoplay = true;
+			this.eleAudio.srcObject = this.remoteStream;
+
+			this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+			this.localStream.getTracks().forEach(track => {
+				track.enabled = this.isMicEnabled;
+				this.pc.addTrack(track, this.localStream);
+			});
+
+			this.channelData = this.pc.createDataChannel('channelData', {
+				negotiated: true,
+				id: 1,
+			});
 
 			this.pc.onicegatheringstatechange = ev => {
 				if (ev.target.iceGatheringState === 'complete') {
@@ -85,10 +112,13 @@ createApp({
 				}
 			}
 
-			this.channelData = this.pc.createDataChannel('channelData', {
-				negotiated: true,
-				id: 1,
-			});
+			this.pc.ontrack = ev => {
+				console.log('----------------------ontrack-------------------');
+				console.log(ev);
+				ev.streams[0].getTracks().forEach(track => {
+					this.remoteStream.addTrack(track);
+				});
+			};
 
 			this.channelData.onopen = ev => {
 				if (this.isOfferSide) {
@@ -101,7 +131,7 @@ createApp({
 				} else {
 					this.modals.waitingConnection = false;
 				}
-			};
+			}
 
 			this.channelData.onmessage = ev => {
 				const data = JSON.parse(ev.data);
@@ -109,6 +139,7 @@ createApp({
 					case 'configuration':
 						this.playerIdentity = data.playerIdentity;
 						this.currentPlayer = data.currentPlayer;
+						this.resetGrid();
 						break;
 					case 'move':
 						this.putMark(data.i, data.j, true);
@@ -117,27 +148,7 @@ createApp({
 						break;
 				}
 				console.log(data);
-			};
-
-			navigator.mediaDevices
-				.getUserMedia(this.mediaConstraints)
-				.then((localStream) => {
-					localStream
-						.getTracks()
-						.forEach((track) => {
-							this.localTrack = track;
-							track.enabled = this.isMicEnabled;
-							this.pc.addTrack(track, localStream);
-						});
-				})
-			// .catch(handleGetUserMediaError);
-
-			// this.pc.ontrack = ev => {
-			// 	const eleAudio = document.querySelector("video");
-			// 	eleAudio.autoplay = true;
-			// 	eleAudio.srcObject = ev.streams[0];
-			// 	console.log(eleAudio);
-			// }
+			}
 		},
 
 		actionPlayLocal() {
@@ -145,80 +156,81 @@ createApp({
 			this.showModal(null);
 		},
 
-		actionPlayRemote(isOfferSide) {
+		async actionPlayRemote(isOfferSide) {
 			this.isOfferSide = isOfferSide;
-			this.setupRemote();
+			await this.setupRemote();
 			if (isOfferSide) {
-				this.pc.createOffer()
-					.then(offer => this.pc.setLocalDescription(offer));
+				const offer = await this.pc.createOffer();
+				await this.pc.setLocalDescription(offer);
 				this.showModal('shareOffer');
 			} else {
 				this.showModal('insertOffer');
 			}
 		},
 
-		actionShareOffer() {
-			this.shareDescription();
+		async actionShareOffer() {
+			await this.shareDescription();
+			this.description = null;
 			this.showModal('insertAnswer');
-			this.description = null;
 		},
 
-		actionShareAnswer() {
-			this.shareDescription();
+		async actionShareAnswer() {
+			await this.shareDescription();
+			this.description = null;
 			this.showModal('waitingConnection');
-			this.description = null;
 		},
 
-		shareDescription() {
-			if (navigator.share) {
-				const shareData = {
-					title: "TikTakToe",
-					text: this.description,
-				};
-				navigator.share(shareData);
-			} else {
-				navigator.clipboard.writeText(this.description);
-			}
+		async shareDescription() {
+			await navigator.clipboard.writeText(this.description);
+			// if (navigator.share) {
+			// 	const shareData = {
+			// 		title: "TikTakToe",
+			// 		text: this.description,
+			// 	};
+			// 	await navigator.share(shareData);
+			// } else {
+			// 	await navigator.clipboard.writeText(this.description);
+			// }
 		},
 
-		actionInsertOffer() {
-			const offer = JSON.parse(atob(this.description));
-			this.pc.setRemoteDescription(offer)
-				.then(() => this.pc.createAnswer())
-				.then(answer => this.pc.setLocalDescription(answer))
-				.then(() => {
-					// TODO: can I get directly the media stream?
-					const stream = new MediaStream();
-					stream.addTrack(this.pc.getSenders()[0].track);
-					const eleAudio = document.querySelector("audio");
-					eleAudio.autoplay = true;
-					eleAudio.srcObject = stream;
-				});
+		async actionInsertOffer() {
+			const objDescription = JSON.parse(atob(this.description));
+			await this.pc.setRemoteDescription(objDescription);
+
+			const answer = await this.pc.createAnswer();
+			await this.pc.setLocalDescription(answer);
 			//send the answer to the other peer via the signaling
 			this.showModal('shareAnswer');
 		},
 
-		actionInsertAnswer() {
-			const answer = JSON.parse(atob(this.description));
-			this.pc.setRemoteDescription(answer)
-				.then(() => {
-					// TODO: can I get directly the media stream?
-					const stream = new MediaStream();
-					stream.addTrack(this.pc.getSenders()[0].track);
-					const eleAudio = document.querySelector("audio");
-					eleAudio.autoplay = true;
-					eleAudio.srcObject = stream;
-				});
+		async actionInsertAnswer() {
+			const objDescription = JSON.parse(atob(this.description));
+			await this.pc.setRemoteDescription(objDescription);
 			this.showModal(null);
 		},
 
 		actionPlayAgain() {
 			// TODO:
+			if (isOfferSide) {
+				this.resetGrid();
+				channelData.send(JSON.stringify({
+					type: 'configuration',
+					playerIdentity: this.playerIdentity === 'x' ? 'o' : 'x',
+					currentPlayer: this.currentPlayer,
+				}));
+			}
+		},
+
+		resetGrid() {
+			this.grids.forEach(smallGrid => smallGrid.fill(null));
 		},
 
 		toggleMic() {
+			// const audioTrack = this.localStream.getTracks().find(track => track.kind === 'audio');
+			const audioTrack = this.localStream.getTracks()[0];
 			this.isMicEnabled = !this.isMicEnabled;
-			this.localTrack.enabled = this.isMicEnabled;
+			audioTrack.enabled = this.isMicEnabled;
+			// console.log(this.pc.getSenders());
 		},
 
 		showModal(modalName) {
