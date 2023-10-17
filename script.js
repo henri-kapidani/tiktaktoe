@@ -113,8 +113,8 @@ const app = createApp({
 			}
 
 			this.pc.ontrack = ev => {
-				console.log('----------------------ontrack-------------------');
-				console.log(ev);
+				// console.log('----------------------ontrack-------------------');
+				// console.log(ev);
 				ev.streams[0].getTracks().forEach(track => {
 					this.remoteStream.addTrack(track);
 				});
@@ -181,16 +181,16 @@ const app = createApp({
 		},
 
 		async shareDescription() {
-			await navigator.clipboard.writeText(this.description);
-			// if (navigator.share) {
-			// 	const shareData = {
-			// 		title: "TikTakToe",
-			// 		text: this.description,
-			// 	};
-			// 	await navigator.share(shareData);
-			// } else {
-			// 	await navigator.clipboard.writeText(this.description);
-			// }
+			// await navigator.clipboard.writeText(this.description);
+			if (navigator.share) {
+				const shareData = {
+					title: "TikTakToe",
+					text: this.description,
+				};
+				await navigator.share(shareData);
+			} else {
+				await navigator.clipboard.writeText(this.description);
+			}
 		},
 
 		async actionInsertOffer() {
