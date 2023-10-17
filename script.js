@@ -7,15 +7,21 @@ createApp({
 			nCells: 9,
 			players: ['o', 'x'],
 			mode: null, // 'local' or 'remote'
+
 			options: {
 				iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 			},
 			pc: null,
-			searchParams: null,
 			isOfferSide: null,
-			offer: null,
-			answer: null,
+			description: null,
 			channelData: null,
+			mediaConstraints: {
+				audio: true,
+				video: false,
+			},
+			isMicEnabled: false,
+			localTrack: null,
+
 
 			bigGrid: null,
 			grids: null,
@@ -73,13 +79,9 @@ createApp({
 
 			this.pc = new RTCPeerConnection(this.options);
 
-			this.pc.onicegatheringstatechange = e => {
-				if (e.target.iceGatheringState === 'complete') {
-					if (this.isOfferSide) {
-						this.offer = btoa(JSON.stringify(this.pc.localDescription));
-					} else {
-						this.answer = btoa(JSON.stringify(this.pc.localDescription));
-					}
+			this.pc.onicegatheringstatechange = ev => {
+				if (ev.target.iceGatheringState === 'complete') {
+					this.description = btoa(JSON.stringify(this.pc.localDescription));
 				}
 			}
 
@@ -88,7 +90,7 @@ createApp({
 				id: 1,
 			});
 
-			this.channelData.onopen = e => {
+			this.channelData.onopen = ev => {
 				if (this.isOfferSide) {
 					this.playerIdentity = this.players[Math.floor(Math.random() * 2)];
 					this.channelData.send(JSON.stringify({
@@ -101,8 +103,8 @@ createApp({
 				}
 			};
 
-			this.channelData.onmessage = e => {
-				const data = JSON.parse(e.data);
+			this.channelData.onmessage = ev => {
+				const data = JSON.parse(ev.data);
 				switch (data.type) {
 					case 'configuration':
 						this.playerIdentity = data.playerIdentity;
@@ -115,16 +117,27 @@ createApp({
 						break;
 				}
 				console.log(data);
-			}
+			};
 
-			if (this.isOfferSide) {
-				this.pc.createOffer()
-					.then(offer => this.pc.setLocalDescription(offer));
-				// send the offer to the other peer via the signaling
-				// completeConnection
-			} else {
+			navigator.mediaDevices
+				.getUserMedia(this.mediaConstraints)
+				.then((localStream) => {
+					localStream
+						.getTracks()
+						.forEach((track) => {
+							this.localTrack = track;
+							track.enabled = this.isMicEnabled;
+							this.pc.addTrack(track, localStream);
+						});
+				})
+			// .catch(handleGetUserMediaError);
 
-			}
+			// this.pc.ontrack = ev => {
+			// 	const eleAudio = document.querySelector("video");
+			// 	eleAudio.autoplay = true;
+			// 	eleAudio.srcObject = ev.streams[0];
+			// 	console.log(eleAudio);
+			// }
 		},
 
 		actionPlayLocal() {
@@ -136,6 +149,8 @@ createApp({
 			this.isOfferSide = isOfferSide;
 			this.setupRemote();
 			if (isOfferSide) {
+				this.pc.createOffer()
+					.then(offer => this.pc.setLocalDescription(offer));
 				this.showModal('shareOffer');
 			} else {
 				this.showModal('insertOffer');
@@ -143,47 +158,67 @@ createApp({
 		},
 
 		actionShareOffer() {
+			this.shareDescription();
+			this.showModal('insertAnswer');
+			this.description = null;
+		},
+
+		actionShareAnswer() {
+			this.shareDescription();
+			this.showModal('waitingConnection');
+			this.description = null;
+		},
+
+		shareDescription() {
 			if (navigator.share) {
 				const shareData = {
 					title: "TikTakToe",
-					text: this.offer,
+					text: this.description,
 				};
 				navigator.share(shareData);
 			} else {
-				navigator.clipboard(this.offer);
+				navigator.clipboard.writeText(this.description);
 			}
-			this.showModal('insertAnswer');
 		},
 
 		actionInsertOffer() {
-			const offer = JSON.parse(atob(this.offer));
+			const offer = JSON.parse(atob(this.description));
 			this.pc.setRemoteDescription(offer)
 				.then(() => this.pc.createAnswer())
 				.then(answer => this.pc.setLocalDescription(answer))
+				.then(() => {
+					// TODO: can I get directly the media stream?
+					const stream = new MediaStream();
+					stream.addTrack(this.pc.getSenders()[0].track);
+					const eleAudio = document.querySelector("audio");
+					eleAudio.autoplay = true;
+					eleAudio.srcObject = stream;
+				});
 			//send the answer to the other peer via the signaling
 			this.showModal('shareAnswer');
 		},
 
-		actionShareAnswer() {
-			if (navigator.share) {
-				const shareData = {
-					title: "TikTakToe",
-					text: this.answer,
-				};
-				navigator.share(shareData);
-			} else {
-				navigator.clipboard(this.answer);
-			}
-			this.showModal('waitingConnection');
-		},
-
 		actionInsertAnswer() {
-			this.pc.setRemoteDescription(JSON.parse(atob(this.answer)));
+			const answer = JSON.parse(atob(this.description));
+			this.pc.setRemoteDescription(answer)
+				.then(() => {
+					// TODO: can I get directly the media stream?
+					const stream = new MediaStream();
+					stream.addTrack(this.pc.getSenders()[0].track);
+					const eleAudio = document.querySelector("audio");
+					eleAudio.autoplay = true;
+					eleAudio.srcObject = stream;
+				});
 			this.showModal(null);
 		},
 
 		actionPlayAgain() {
 			// TODO:
+		},
+
+		toggleMic() {
+			this.isMicEnabled = !this.isMicEnabled;
+			this.localTrack.enabled = this.isMicEnabled;
 		},
 
 		showModal(modalName) {
