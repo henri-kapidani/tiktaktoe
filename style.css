@@ -68,6 +68,7 @@
 }
 
 .active-indicator {
+	position: relative;
 	border: var(--active-border-size) solid var(--bg-color);
 }
 
@@ -81,6 +82,21 @@
 
 .active-indicator.current-grid.disabled-grid {
 	border-color: grey;
+}
+
+.active-indicator.winner::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	opacity: .5;
+}
+
+.cell-big.o .active-indicator.winner::after {
+	background-color: blue;
+}
+
+.cell-big.x .active-indicator.winner::after {
+	background-color: red;
 }
 
 .cell {

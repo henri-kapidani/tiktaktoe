@@ -29,6 +29,7 @@
 					<div class="active-indicator" :class="{
 						'current-grid': isCurrentGrid(i),
 						'disabled-grid': !isCurrentGrid(i, true),
+						winner: gameResult.indexes.includes(i)
 					}">
 						<div class="grid grid-small">
 							<div v-for="(cell, j) in grid" :key="`${i}${j}`" class="cell cell-small"
@@ -202,7 +203,7 @@
 					</div>
 				</div>
 
-				<div class="modal fade" :class="{show: modals.result}">
+				<!-- <div class="modal fade" :class="{show: modals.result}">
 					<div class="modal-dialog modal-dialog-centered">
 						<div class="modal-content">
 							<div class="modal-header">
@@ -221,13 +222,14 @@
 							</div>
 						</div>
 					</div>
-				</div>
+				</div> -->
 			</div>
 
 			<div class="menu">
 				<button class="btn btn-primary" @click="invertTheme">Theme</button>
 				<button class="btn btn-primary" @click="showLastMove">Last move</button>
-				<button class="btn btn-primary" @click="toggleMic">{{ isMicEnabled ? 'Mute mic' :
+				<button class="btn btn-primary" @click="toggleMic" v-if="mode === 'remote'" :disabled="!isMicEnabled">{{
+					isMicEnabled ? 'Mute mic' :
 					'Open mic'}}</button>
 			</div>
 		</div>

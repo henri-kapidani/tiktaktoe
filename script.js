@@ -30,17 +30,16 @@ const app = createApp({
 			isOfferSide: null,
 			description: null,
 			channelData: null,
+			hasMicPermission: false,
 			isMicEnabled: false,
 			localStream: null,
 			remoteStream: null,
 			eleAudio: null,
 
-			bigGrid: null,
 			grids: null,
 			currentPlayer: null,
 			playerIdentity: null,
 			currentGridIndex: null,
-			gameResult: null,
 
 			modals: {
 				start: true,
@@ -50,7 +49,7 @@ const app = createApp({
 				waitingConnection: false,
 				insertOffer: false,
 				insertAnswer: false,
-				result: false,
+				// result: false,
 			},
 		};
 	},
@@ -61,23 +60,21 @@ const app = createApp({
 		},
 
 		initializeTestGame() {
-			this.bigGrid = [null, 'x', 'x', 'o', 'o', null, null, null, null];
 			this.grids = [
 				[null, 'x', 'x', 'o', null, null, null, null, null],
 				[null, 'x', 'x', 'o', null, null, null, null, null],
 				[null, 'x', 'x', 'o', null, null, null, null, null],
-				[null, 'x', 'x', 'o', null, null, null, null, null],
-				[null, 'x', 'x', 'o', null, null, null, null, null],
+				['o', 'o', 'o', 'o', null, null, null, null, null],
+				[null, 'o', 'o', null, null, null, null, null, null],
 				[null, 'o', 'o', null, null, null, null, null, null],
 				[null, 'x', 'x', 'o', null, null, null, null, null],
 				[null, 'x', 'x', 'o', null, null, null, null, null],
-				[null, 'x', 'x', 'o', null, null, null, null, null],
+				[null, 'x', 'x', 'o', null, null, null, null, 'x'],
 			];
 			this.currentPlayer = 'x';
 		},
 
 		initializeGame() {
-			this.bigGrid = Array(this.nCells).fill(null);
 			this.grids = Array(this.nCells).fill(null).map(e => Array(this.nCells).fill(null));
 			this.currentPlayer = this.players[Math.floor(Math.random() * 2)];
 		},
@@ -97,11 +94,16 @@ const app = createApp({
 			this.eleAudio.autoplay = true;
 			this.eleAudio.srcObject = this.remoteStream;
 
-			this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-			this.localStream.getTracks().forEach(track => {
-				track.enabled = this.isMicEnabled;
-				this.pc.addTrack(track, this.localStream);
-			});
+			try {
+				this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+				this.localStream.getTracks().forEach(track => {
+					track.enabled = this.isMicEnabled;
+					this.pc.addTrack(track, this.localStream);
+				});
+				this.hasMicPermission = true;
+			} catch (error) {
+				console.log(error);
+			}
 
 			this.channelData = this.pc.createDataChannel('channelData', {
 				negotiated: true,
@@ -213,14 +215,19 @@ const app = createApp({
 
 		actionPlayAgain() {
 			// TODO:
-			if (isOfferSide) {
+			if (this.mode === 'remote') {
+				if (this.isOfferSide) {
+					this.resetGrid();
+					channelData.send(JSON.stringify({
+						type: 'configuration',
+						playerIdentity: this.playerIdentity === 'x' ? 'o' : 'x',
+						currentPlayer: this.currentPlayer,
+					}));
+				}
+			} else {
 				this.resetGrid();
-				channelData.send(JSON.stringify({
-					type: 'configuration',
-					playerIdentity: this.playerIdentity === 'x' ? 'o' : 'x',
-					currentPlayer: this.currentPlayer,
-				}));
 			}
+
 		},
 
 		resetGrid() {
@@ -236,12 +243,14 @@ const app = createApp({
 		},
 
 		showLastMove() {
-			if (!this.isShowLastMove) {
-				setTimeout(() => {
-					this.isShowLastMove = false;
-				}, 2000);
+			if (this.lastMove.i !== null) {
+				if (!this.isShowLastMove) {
+					setTimeout(() => {
+						this.isShowLastMove = false;
+					}, 2000);
+				}
+				this.isShowLastMove = true;
 			}
-			this.isShowLastMove = true;
 		},
 
 		showModal(modalName) {
@@ -252,12 +261,9 @@ const app = createApp({
 		},
 
 		putMark(i, j, remote) {
-			if ((this.isCurrentGrid(i, true) && this.grids[i][j] === null && !this.gameResult) || remote) {
+			if ((this.isCurrentGrid(i, true) && this.grids[i][j] === null && !this.gameResult.player) || remote) {
+				this.isShowLastMove = false;
 				this.grids[i][j] = this.currentPlayer;
-
-				this.bigGrid[i] = this.gridResultStatus(this.grids[i]);
-				this.gameResult = this.gridResultStatus(this.bigGrid);
-				this.modals.result = !!this.gameResult;
 
 				if (this.bigGrid[j] !== null) {
 					this.currentGridIndex = null;
@@ -278,24 +284,62 @@ const app = createApp({
 		},
 
 		gridResultStatus(grid) {
-			const u = this.currentPlayer;
-			// const strGrid = grid.join('');
-			// const combination = Array(this.nCells).fill(this.currentPlayer).join('');
-			if (
-				grid[0] === u && grid[1] === u && grid[2] === u ||
-				grid[3] === u && grid[4] === u && grid[5] === u ||
-				grid[6] === u && grid[7] === u && grid[8] === u ||
-				grid[0] === u && grid[3] === u && grid[6] === u ||
-				grid[1] === u && grid[4] === u && grid[7] === u ||
-				grid[2] === u && grid[5] === u && grid[8] === u ||
-				grid[0] === u && grid[4] === u && grid[8] === u ||
-				grid[2] === u && grid[4] === u && grid[6] === u
-			) {
-				return this.currentPlayer;
-			} else if (!grid.includes(null)) {
-				return '-';
+			const gridSide = Math.sqrt(this.nCells);
+
+			// check vertical rows
+			for (let i = 0; i < gridSide; i++) {
+				const indexes = [];
+				const player = grid[i];
+				let isLineOwned = true;
+				for (let j = i; j < this.nCells; j += gridSide) {
+					indexes.push(j);
+					if (player !== grid[j]) isLineOwned = false;
+				}
+				if (isLineOwned && player) return { player, indexes };;
 			}
-			return null;
+
+			// check horizontal rows
+			for (let i = 0; i < this.nCells; i += gridSide) {
+				const indexes = [];
+				const player = grid[i];
+				let isLineOwned = true;
+				for (let j = i; j < i + gridSide; j++) {
+					indexes.push(j);
+					if (player !== grid[j]) isLineOwned = false;
+				}
+				if (isLineOwned && player) return { player, indexes };
+			}
+
+			// check first diagonal
+			{
+				const i = 0;
+				const indexes = [];
+				const player = grid[i];
+				let isLineOwned = true;
+				for (let j = i; j < this.nCells; j += gridSide + 1) {
+					indexes.push(j);
+					if (player !== grid[j]) isLineOwned = false;
+				}
+				if (isLineOwned && player) return { player, indexes };
+			}
+
+			// check second diagonal
+			{
+				const i = gridSide - 1;
+				const indexes = [];
+				const player = grid[i];
+				let isLineOwned = true;
+				for (let j = i; j < this.nCells - 1; j += gridSide - 1) {
+					indexes.push(j);
+					if (player !== grid[j]) isLineOwned = false;
+				}
+				if (isLineOwned && player) return { player, indexes };
+			}
+
+			if (!grid.includes(null)) {
+				return { player: '-', indexes: [] };
+			}
+			return { player: null, indexes: [] };
 		},
 
 		isCurrentGrid(i, considerRemote) {
@@ -303,7 +347,7 @@ const app = createApp({
 				(
 					(this.currentGridIndex === null && this.bigGrid[i] === null) ||
 					(this.currentGridIndex !== null && i === this.currentGridIndex)
-				) && !this.gameResult
+				) && !this.gameResult.player
 			) {
 				if (considerRemote && this.mode === 'remote' && (this.currentPlayer != this.playerIdentity)) {
 					return false;
@@ -315,8 +359,17 @@ const app = createApp({
 		},
 	},
 
+	computed: {
+		bigGrid() {
+			return this.grids.map(grid => this.gridResultStatus(grid).player);
+		},
+		gameResult() {
+			return this.gridResultStatus(this.bigGrid);
+		}
+	},
+
 	created() {
-		// this.initializeGame();
-		this.initializeTestGame();
+		this.initializeGame();
+		// this.initializeTestGame();
 	}
 }).mount('#app');
