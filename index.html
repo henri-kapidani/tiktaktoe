@@ -20,7 +20,7 @@
 <body>
 	<div id="app" v-cloak>
 		<div class="theme" :class="theme">
-			<div class="grid grid-big centered" :class="currentPlayer">
+			<div class="grid grid-big centered" :class="{ [currentPlayer]: true, 'show-last': isShowLastMove }">
 				<div v-for="(grid, i) in grids" :key="i" class="cell cell-big" :class="{
 					owned: bigGrid[i] !== null,
 					o: bigGrid[i] === 'o',
@@ -32,7 +32,7 @@
 					}">
 						<div class="grid grid-small">
 							<div v-for="(cell, j) in grid" :key="`${i}${j}`" class="cell cell-small"
-								:class="{owned: grid[j] !== null, o: grid[j] === 'o', x: grid[j] === 'x'}"
+								:class="{owned: grid[j] !== null, o: grid[j] === 'o', x: grid[j] === 'x', last: i === lastMove.i && j === lastMove.j}"
 								@click="putMark(i, j)">
 							</div>
 						</div>
@@ -226,6 +226,7 @@
 
 			<div class="menu">
 				<button class="btn btn-primary" @click="invertTheme">Theme</button>
+				<button class="btn btn-primary" @click="showLastMove">Last move</button>
 				<button class="btn btn-primary" @click="toggleMic">{{ isMicEnabled ? 'Mute mic' :
 					'Open mic'}}</button>
 			</div>

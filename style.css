@@ -130,6 +130,10 @@
 	gap: 10px;
 }
 
+.show-last .last {
+	background-color: orange;
+}
+
 [data-bs-theme="dark"] {
 	color: rgb(222, 226, 230)
 }

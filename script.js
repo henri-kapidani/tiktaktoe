@@ -20,6 +20,8 @@ const app = createApp({
 			nCells: 9,
 			players: ['o', 'x'],
 			mode: null, // 'local' or 'remote'
+			lastMove: { i: null, j: null },
+			isShowLastMove: false,
 
 			options: {
 				iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -233,6 +235,15 @@ const app = createApp({
 			// console.log(this.pc.getSenders());
 		},
 
+		showLastMove() {
+			if (!this.isShowLastMove) {
+				setTimeout(() => {
+					this.isShowLastMove = false;
+				}, 2000);
+			}
+			this.isShowLastMove = true;
+		},
+
 		showModal(modalName) {
 			for (const key in this.modals) {
 				this.modals[key] = false;
@@ -254,6 +265,8 @@ const app = createApp({
 					this.currentGridIndex = j;
 				}
 				this.currentPlayer = this.currentPlayer === 'o' ? 'x' : 'o';
+				this.lastMove.i = i;
+				this.lastMove.j = j;
 				if (this.mode === 'remote' && !remote) {
 					this.channelData.send(JSON.stringify({
 						type: 'move',
@@ -303,7 +316,7 @@ const app = createApp({
 	},
 
 	created() {
-		this.initializeGame();
-		// this.initializeTestGame();
+		// this.initializeGame();
+		this.initializeTestGame();
 	}
 }).mount('#app');
