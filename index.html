@@ -228,9 +228,10 @@
 			<div class="menu">
 				<button class="btn btn-primary" @click="invertTheme">Theme</button>
 				<button class="btn btn-primary" @click="showLastMove">Last move</button>
-				<button class="btn btn-primary" @click="toggleMic" v-if="mode === 'remote'" :disabled="!isMicEnabled">{{
-					isMicEnabled ? 'Mute mic' :
-					'Open mic'}}</button>
+				<button class="btn btn-primary" @click="toggleMic" v-if="mode === 'remote'"
+					:disabled="!hasMicPermission">{{ isMicEnabled ? 'Mute mic' : 'Open mic' }}</button>
+				<button type="button" class="btn btn-primary" v-if="gameResult.player" @click="actionPlayAgain">Play
+					again</button>
 			</div>
 		</div>
 	</div>

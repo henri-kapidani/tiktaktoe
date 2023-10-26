@@ -185,15 +185,13 @@ const app = createApp({
 		},
 
 		async shareDescription() {
-			// await navigator.clipboard.writeText(this.description);
+			await navigator.clipboard.writeText(this.description);
 			if (navigator.share) {
 				const shareData = {
 					title: "TikTakToe",
 					text: this.description,
 				};
 				await navigator.share(shareData);
-			} else {
-				await navigator.clipboard.writeText(this.description);
 			}
 		},
 
