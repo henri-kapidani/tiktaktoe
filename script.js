@@ -28,13 +28,27 @@ const app = createApp({
 			},
 			pc: null,
 			isOfferSide: null,
-			description: null,
 			channelData: null,
 			hasMicPermission: false,
 			isMicEnabled: false,
 			localStream: null,
 			remoteStream: null,
 			eleAudio: null,
+
+			// urlSignaling: 'http://localhost/rtc-server-php/index.php',
+			urlSignaling: 'https://feedin.link/signaling/',
+			room: null,
+			requestOptions: {
+				method: "POST", // *GET, POST, PUT, DELETE, etc.
+				mode: "cors", // no-cors, *cors, same-origin
+				cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+				credentials: "same-origin", // include, *same-origin, omit
+				headers: {
+					"Content-Type": "application/json",
+				},
+				redirect: "follow", // manual, *follow, error
+				referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+			},
 
 			grids: null,
 			currentPlayer: null,
@@ -43,12 +57,9 @@ const app = createApp({
 
 			modals: {
 				start: true,
-				remoteType: false,
 				shareOffer: false,
-				shareAnswer: false,
 				waitingConnection: false,
 				insertOffer: false,
-				insertAnswer: false,
 				// result: false,
 			},
 		};
@@ -110,15 +121,17 @@ const app = createApp({
 				id: 1,
 			});
 
-			this.pc.onicegatheringstatechange = ev => {
+			this.pc.onicegatheringstatechange = async ev => {
 				if (ev.target.iceGatheringState === 'complete') {
-					this.description = btoa(JSON.stringify(this.pc.localDescription));
+					if (this.isOfferSide) {
+						await this.createRoom();
+					} else {
+						await this.joinRoom();
+					}
 				}
 			}
 
 			this.pc.ontrack = ev => {
-				// console.log('----------------------ontrack-------------------');
-				// console.log(ev);
 				ev.streams[0].getTracks().forEach(track => {
 					this.remoteStream.addTrack(track);
 				});
@@ -132,9 +145,8 @@ const app = createApp({
 						playerIdentity: this.playerIdentity === 'x' ? 'o' : 'x',
 						currentPlayer: this.currentPlayer,
 					}));
-				} else {
-					this.modals.waitingConnection = false;
 				}
+				this.showModal(null);
 			}
 
 			this.channelData.onmessage = ev => {
@@ -168,47 +180,81 @@ const app = createApp({
 				await this.pc.setLocalDescription(offer);
 				this.showModal('shareOffer');
 			} else {
-				this.showModal('insertOffer');
+				if (this.room) {
+					await this.actionInsertOffer();
+				} else {
+					this.showModal('insertOffer');
+				}
 			}
+		},
+
+		async createRoom() {
+			let response = await fetch(this.urlSignaling, {
+				...this.requestOptions,
+				body: JSON.stringify({
+					action: 'POST',
+					type: 'offer',
+					room: '',
+					description: JSON.stringify(this.pc.localDescription),
+				}),
+			});
+			let body = await response.json();
+			this.room = body.data.room;
+			// wait for the answer
+			response = await fetch(this.urlSignaling, {
+				...this.requestOptions,
+				body: JSON.stringify({
+					action: 'GET',
+					type: 'answer',
+					room: this.room,
+					description: '',
+				}),
+			});
+			body = await response.json();
+			await this.pc.setRemoteDescription(JSON.parse(body.data.description));
 		},
 
 		async actionShareOffer() {
-			await this.shareDescription();
-			this.description = null;
-			this.showModal('insertAnswer');
-		},
+			await navigator.clipboard.writeText(this.room); // TODO: fix the url
+			if (navigator.share) {
+				await navigator.share({
+					title: "TikTakToe",
+					url: `?r=${this.room}`,
+				});
+			}
 
-		async actionShareAnswer() {
-			await this.shareDescription();
-			this.description = null;
 			this.showModal('waitingConnection');
 		},
 
-		async shareDescription() {
-			await navigator.clipboard.writeText(this.description);
-			if (navigator.share) {
-				const shareData = {
-					title: "TikTakToe",
-					text: this.description,
-				};
-				await navigator.share(shareData);
-			}
-		},
-
 		async actionInsertOffer() {
-			const objDescription = JSON.parse(atob(this.description));
-			await this.pc.setRemoteDescription(objDescription);
-
+			this.showModal('waitingConnection');
+			const response = await fetch(this.urlSignaling, {
+				...this.requestOptions,
+				body: JSON.stringify({
+					action: 'GET',
+					type: 'offer',
+					room: this.room,
+					description: '',
+				}),
+			});
+			const body = await response.json();
+			await this.pc.setRemoteDescription(JSON.parse(body.data.description));
 			const answer = await this.pc.createAnswer();
 			await this.pc.setLocalDescription(answer);
-			//send the answer to the other peer via the signaling
-			this.showModal('shareAnswer');
 		},
 
-		async actionInsertAnswer() {
-			const objDescription = JSON.parse(atob(this.description));
-			await this.pc.setRemoteDescription(objDescription);
-			this.showModal(null);
+		async joinRoom() {
+			//send the answer to the other peer via the signaling
+			await fetch(this.urlSignaling, {
+				...this.requestOptions,
+				body: JSON.stringify({
+					action: 'POST',
+					type: 'answer',
+					room: this.room,
+					description: JSON.stringify(this.pc.localDescription),
+				}),
+			});
+			// const body = await response.json();
 		},
 
 		actionPlayAgain() {
@@ -366,8 +412,13 @@ const app = createApp({
 		}
 	},
 
-	created() {
+	async created() {
 		this.initializeGame();
 		// this.initializeTestGame();
+		this.room = new URLSearchParams(window.location.search).get('r');
+		if (this.room) {
+			history.replaceState(null, '', '/');
+			await this.actionPlayRemote(false);
+		}
 	}
 }).mount('#app');

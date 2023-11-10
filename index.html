@@ -53,117 +53,81 @@
 								You can play with your friends on the same device, or from remote, each one on his
 								device.
 							</div>
-							<div class="modal-footer">
+							<div class="modal-footer d-flex justify-content-between">
 								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
 									@click="actionPlayLocal">Play local</button>
 
-								<button type="button" class="btn btn-primary" @click="showModal('remoteType')">Play
-									remote</button>
+								<div>
+									<button type="button" class="btn btn-primary" @click="actionPlayRemote(true)">Create
+										room</button>
+
+									<button type="button" class="btn btn-primary ms-2"
+										@click="actionPlayRemote(false)">Join
+										room</button>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 
-				<div class="modal fade" :class="{show: modals.remoteType}">
-					<div class="modal-dialog modal-dialog-centered">
-						<div class="modal-content">
-							<div class="modal-header">
-								<h1 class="modal-title fs-5">Code type</h1>
-							</div>
-							<div class="modal-body">
-								Do you have the code or you want to invite?
-							</div>
-							<div class="modal-footer">
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-									@click="actionPlayLocal">Play local</button>
-
-								<button type="button" class="btn btn-primary"
-									@click="actionPlayRemote(true)">Invite</button>
-
-								<button type="button" class="btn btn-primary" @click="actionPlayRemote(false)">I have
-									the code</button>
-							</div>
-						</div>
-					</div>
-				</div>
 
 				<div class="modal fade" :class="{show: modals.shareOffer}">
 					<div class="modal-dialog modal-dialog-centered">
 						<div class="modal-content">
 							<div class="modal-header">
-								<h1 class="modal-title fs-5">Share the code</h1>
+								<h1 class="modal-title fs-5">Create room</h1>
+								<button v-if="room" type="button" class="btn-close"
+									@click="showModal('waitingConnection')"></button>
 							</div>
 							<div class="modal-body">
 								<div>
-									Send the code to your friend and wait for him to send you his code.
+									Share the room code or link...
+								</div>
+								<div v-if="room">
+									Room code: <b>{{ room }}</b>
 								</div>
 							</div>
-							<div class="modal-footer">
+							<div class="modal-footer d-flex justify-content-between">
 								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
 									@click="actionPlayLocal">Play local</button>
 
-								<button type="button" class="btn btn-primary" :disabled="!description"
+								<button type="button" class="btn btn-primary" :disabled="!room"
 									@click="actionShareOffer">
-									<span v-if="!description" class="spinner-border spinner-border-sm" role="status"
+									<span v-if="!room" class="spinner-border spinner-border-sm" role="status"
 										aria-hidden="true"></span>
-									<span v-if="!description">Generating code...</span>
-									<span v-if="description">Share code</span>
+									<span v-if="!room" class="ms-1">Creating room...</span>
+									<span v-if="room">Share room</span>
 								</button>
 							</div>
 						</div>
 					</div>
 				</div>
+
 
 				<div class="modal fade" :class="{show: modals.insertOffer}">
 					<div class="modal-dialog modal-dialog-centered">
 						<div class="modal-content">
 							<div class="modal-header">
-								<h1 class="modal-title fs-5">Insert the code</h1>
+								<h1 class="modal-title fs-5">Join room</h1>
 							</div>
 							<div class="modal-body">
 								<div>
-									Insert the code that your friend has sent to you to complete the connection.
+									Room code
 									<div class="my-3">
-										<input type="text" class="form-control" v-model="description">
+										<input type="text" class="form-control" v-model="room">
 									</div>
 								</div>
 							</div>
-							<div class="modal-footer">
+							<div class="modal-footer d-flex justify-content-between">
 								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
 									@click="actionPlayLocal">Play local</button>
 
-								<button type="button" class="btn btn-primary" @click="actionInsertOffer">Next</button>
+								<button type="button" class="btn btn-primary" @click="actionInsertOffer">Join</button>
 							</div>
 						</div>
 					</div>
 				</div>
 
-				<div class="modal fade" :class="{show: modals.shareAnswer}">
-					<div class="modal-dialog modal-dialog-centered">
-						<div class="modal-content">
-							<div class="modal-header">
-								<h1 class="modal-title fs-5">Share the code</h1>
-							</div>
-							<div class="modal-body">
-								<div>
-									Send the code back to your friends to complete the connection.
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-									@click="actionPlayLocal">Play local</button>
-
-								<button type="button" class="btn btn-primary" :disabled="!description"
-									@click="actionShareAnswer">
-									<span v-if="!description" class="spinner-border spinner-border-sm" role="status"
-										aria-hidden="true"></span>
-									<span v-if="!description">Generating code...</span>
-									<span v-if="description">Share code</span>
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
 
 				<div class="modal fade" :class="{show: modals.waitingConnection}">
 					<div class="modal-dialog modal-dialog-centered">
@@ -177,53 +141,8 @@
 						</div>
 					</div>
 				</div>
-
-				<div class="modal fade" :class="{show: modals.insertAnswer}">
-					<div class="modal-dialog modal-dialog-centered">
-						<div class="modal-content">
-							<div class="modal-header">
-								<h1 class="modal-title fs-5">Insert the code</h1>
-							</div>
-							<div class="modal-body">
-								<div>
-									Insert the code that your friend has sent to you to complete the connection.
-									<div class="my-3">
-										<input type="text" class="form-control" v-model="description">
-									</div>
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-									@click="actionPlayLocal">Play local</button>
-
-								<button type="button" class="btn btn-primary"
-									@click="actionInsertAnswer">Connect!</button>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- <div class="modal fade" :class="{show: modals.result}">
-					<div class="modal-dialog modal-dialog-centered">
-						<div class="modal-content">
-							<div class="modal-header">
-								<h1 class="modal-title fs-5"></h1>
-								<button type="button" class="btn-close" data-bs-dismiss="modal"
-									@click="showModal(null)"></button>
-							</div>
-							<div class="modal-body">
-								<h1>The winner is {{ gameResult }}</h1>
-							</div>
-							<div class="modal-footer">
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-									@click="showModal(null)">Close</button>
-								<button type="button" class="btn btn-primary" @click="actionPlayAgain">Play
-									again</button>
-							</div>
-						</div>
-					</div>
-				</div> -->
 			</div>
+
 
 			<div class="menu">
 				<button class="btn btn-primary" @click="invertTheme">Theme</button>
